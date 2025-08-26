@@ -74,20 +74,20 @@
                     
                     link.clicks.forEach(click => {
                         const clickInfo = document.createElement('p');
-                        let infoText = `1. Waktu: ${new Date(click.timestamp).toLocaleString()}`;
+                        let infoText = `- Waktu: ${new Date(click.timestamp).toLocaleString()}`;
                         if (click.os) {
-                            infoText += `\n2. OS: ${click.os}`;
+                            infoText += `\n- OS: ${click.os}`;
                         }
                         if (click.device) {
-                            infoText += `\n3. Device: ${click.device}`;
+                            infoText += `\n- Device: ${click.device}`;
                         }
                         if (click.ipInfo) {
-                            infoText += `\n4. IP: ${click.ipInfo.ip} (${click.ipInfo.city}, ${click.ipInfo.country})`;
+                            infoText += `\n- IP: ${click.ipInfo.ip} (${click.ipInfo.city}, ${click.ipInfo.country})`;
                         }
                         if (click.location) {
-                            infoText += `\n5. Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
+                            infoText += `\n- Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
                         } else  {
-                            infoText += '\n5. Lokasi: Tidak Diizinkan';
+                            infoText += '\n- Lokasi: Tidak Diizinkan';
                         }
                         clickInfo.style.whiteSpace = "pre";
                         clickInfo.textContent = infoText;
