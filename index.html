@@ -102,13 +102,18 @@
         }
         
         window.onload = function() {
-            updateLocationData();
             const refreshInterval = setInterval(() => {
                 const locationDataDiv = document.getElementById('locationData');
+                for (const [linkId, link] of Object.entries(links)) {
+                    if (link.clicks && link.clicks.length > 0) {
+                        // kalau sudah ada data, berhenti refresh
+                        clearInterval(refreshInterval);
+                        break;
+                    }
+                }
+                // kalau masih belum ada data sama sekali, jalankan update lagi
                 if (locationDataDiv.innerText.includes('Belum ada data lokasi')) {
                     updateLocationData();
-                } else {
-                    clearInterval(refreshInterval);
                 }
             }, 5000);
         }
