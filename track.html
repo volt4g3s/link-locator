@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOADING...</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+    </style>
+</head>
+<body>
+    <h1>Mengarahkan ke Tujuan...</h1>
+    <p>Browser mungkin meminta izin untuk membagikan lokasi Anda.</p>
+    <p>Jika tidak otomatis diarahkan, <a id="destinationLink" href="#">klik di sini</a>.</p>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const linkId = urlParams.get('id');
+        const links = JSON.parse(localStorage.getItem('trackingLinks')) || {};
+        const linkData = links[linkId];
+        
+        if (linkData) {
+            const clickData = { timestamp: Date.now() };
+            
+            // Dapatkan info IP
+            fetch('https://ipapi.co/json/')
+                .then(response => response.json())
+                .then(ipInfo => {
+                    clickData.ipInfo = {
+                        ip: ipInfo.ip,
+                        country: ipInfo.country_name
+                    };
+                    
+                    // Coba dapatkan lokasi
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            position => {
+                                clickData.location = {
+                                    latitude: position.coords.latitude,
+                                    longitude: position.coords.longitude
+                                };
+                                saveAndRedirect();
+                            },
+                            () => saveAndRedirect(),
+                            { timeout: 5000 }
+                        );
+                    } else {
+                        saveAndRedirect();
+                    }
+                })
+                .catch(() => saveAndRedirect());
+            
+            function saveAndRedirect() {
+                window.location.href = linkData.targetUrl;
+                document.getElementById('destinationLink').href = linkData.targetUrl;
+            }
+        } else {
+            document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
+        }
+    </script>
+</body>
+</html>
