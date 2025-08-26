@@ -95,6 +95,9 @@
         
         window.onload = function() {
             updateLocationData();
+            setInterval(() => {
+                location.replace(location.href);
+            }, 10000);
         };
     </script>
 </body>
