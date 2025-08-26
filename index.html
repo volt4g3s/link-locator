@@ -90,14 +90,13 @@
             
             if (!hasData) {
                 locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
+            } else {
+                location.reload();
             }
         }
         
         window.onload = function() {
             updateLocationData();
-            setInterval(() => {
-                location.replace(location.href);
-            }, 10000);
         };
     </script>
 </body>
