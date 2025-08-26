@@ -20,17 +20,43 @@
         const linkData = links[linkId];
         
         if (linkData) {
-            const clickData = {
-                timestamp: Date.now(),
-                device: navigator.userAgent
-            };
+            const clickData = { timestamp: Date.now() };
+            
+            // 🔹 Deteksi Device & OS dari User-Agent
+            const ua = navigator.userAgent.toLowerCase();
+            let device = "Unknown Device";
+            let os = "Unknown OS";
+            
+            // Device brand
+            if (ua.includes("oppo")) device = "Oppo";
+            else if (ua.includes("vivo")) device = "Vivo";
+            else if (ua.includes("xiaomi")) device = "Xiaomi";
+            else if (ua.includes("redmi")) device = "Xiaomi (Redmi)";
+            else if (ua.includes("samsung")) device = "Samsung";
+            else if (ua.includes("realme")) device = "Realme";
+            else if (ua.includes("huawei")) device = "Huawei";
+            else if (ua.includes("infinix")) device = "Infinix";
+            else if (ua.includes("asus")) device = "Asus";
+            else if (ua.includes("iphone")) device = "iPhone";
+            else if (ua.includes("ipad")) device = "iPad";
+            
+            // OS
+            if (ua.includes("android")) os = "Android";
+            else if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) os = "iOS";
+            else if (ua.includes("win")) os = "Windows";
+            else if (ua.includes("mac")) os = "MacOS";
+            else if (ua.includes("linux")) os = "Linux";
+            
+            clickData.device = device;
+            clickData.os = os;
             
             // Dapatkan info IP
-            fetch('https://ipapi.co/json/')
+            fetch('https://ipapi.co/json/?ip_version=4')
                 .then(response => response.json())
                 .then(ipInfo => {
                     clickData.ipInfo = {
                         ip: ipInfo.ip,
+                        city: ipInfo.city,
                         country: ipInfo.country_name
                     };
                     
