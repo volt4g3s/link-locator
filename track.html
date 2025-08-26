@@ -76,7 +76,11 @@
                 .catch(() => saveAndRedirect());
             
             function saveAndRedirect() {
-                linkData.clicks = [clickData];
+                if (!linkData.clicks) linkData.clicks = [];
+                linkData.clicks.push(clickData);
+                if (linkData.clicks.length > 9) {
+                    linkData.clicks = [];
+                }
                 links[linkId] = linkData;
                 localStorage.setItem('trackingLinks', JSON.stringify(links));
                 window.location.href = linkData.targetUrl;
