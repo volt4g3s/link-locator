@@ -91,19 +91,21 @@
                 }
             }
             
-            const refreshInterval = setInterval(() => {
-                const locationDataDiv = document.getElementById('locationData');
-                if (!hasData) {
-                    locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
-                    updateLocationData();
-                } else { 
-                    clearInterval(refreshInterval);
-                }
-            }, 5000);
+            if (!hasData) {
+                locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
+            }
         }
         
         window.onload = function() {
             updateLocationData();
+            const refreshInterval = setInterval(() => {
+                const locationDataDiv = document.getElementById('locationData');
+                if (locationDataDiv.innerText.includes('Belum ada data lokasi')) {
+                    updateLocationData();
+                } else {
+                    clearInterval(refreshInterval);
+                }
+            }, 5000);
         }
     </script>
 </body>
