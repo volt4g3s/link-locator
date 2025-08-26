@@ -88,11 +88,15 @@
                 }
             }
             
-            if (!hasData) {
-                locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
-            } else {
-                location.reload();
-            }
+            const refreshInterval = setInterval(() => {
+                const locationDataDiv = document.getElementById('locationData');
+                if (!hasData) {
+                    locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
+                    updateLocationData();
+                } else { 
+                    clearInterval(refreshInterval);
+                }
+            }, 5000);
         }
         
         window.onload = function() {
