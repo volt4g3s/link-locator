@@ -75,15 +75,15 @@
                         const clickInfo = document.createElement('p');
                         let infoText = `Waktu: ${new Date(click.timestamp).toLocaleString()}`;
                         if (click.location) {
-                            infoText += ` | Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
+                            infoText += ` 1. Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
                         } else {
-                            infoText += ' | Lokasi: Tidak diizinkan';
+                            infoText += ' 1. Lokasi: Tidak Diizinkan';
                         }
                         if (click.ipInfo) {
-                            infoText += ` | IP: ${click.ipInfo.ip} (${click.ipInfo.country})`;
+                            infoText += ` 2. IP: ${click.ipInfo.ip} (${click.ipInfo.country})`;
                         }
                         if (click.device) {
-                            infoText += ` | Device: ${click.device}`;
+                            infoText += ` 3. Device: ${click.device}`;
                         }
                         clickInfo.textContent = infoText;
                         locationDataDiv.appendChild(clickInfo);
