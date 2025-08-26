@@ -63,9 +63,11 @@
         function updateLocationData() {
             const locationDataDiv = document.getElementById('locationData');
             locationDataDiv.innerHTML = '';
-            
             let hasData = false;
-            for (const linkId in links) {
+            if (!hasData) {
+                locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
+            }
+            for (const linkId of links) {
                 const link = links[linkId];
                 if (link.clicks && link.clicks.length > 0) {
                     hasData = true;
@@ -77,27 +79,25 @@
                         const clickInfo = document.createElement('p');
                         let infoText = `1. Waktu: ${new Date(click.timestamp).toLocaleString()}`;
                         if (click.os) {
-                            infoText += `<br>2. OS: ${click.os}`;
+                            infoText += `\n2. OS: ${click.os}`;
                         }
                         if (click.device) {
-                            infoText += `<br>3. Device: ${click.device}`;
+                            infoText += `\n3. Device: ${click.device}`;
                         }
                         if (click.ipInfo) {
-                            infoText += `<br>4. IP: ${click.ipInfo.ip} (${click.ipInfo.city}, ${click.ipInfo.country})`;
+                            infoText += `\n4. IP: ${click.ipInfo.ip} (${click.ipInfo.city}, ${click.ipInfo.country})`;
                         }
                         if (click.location) {
-                            infoText += `<br>5. Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
+                            infoText += `\n5. Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
                         } else  {
-                            infoText += '<br>5. Lokasi: Tidak Diizinkan';
+                            infoText += '\n5. Lokasi: Tidak Diizinkan';
                         }
+                        clickInfo.style.whiteSpace = "pre";
                         clickInfo.textContent = infoText;
                         locationDataDiv.appendChild(clickInfo);
                     });
+                    break;
                 }
-            }
-            
-            if (!hasData) {
-                locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
             }
         }
         
