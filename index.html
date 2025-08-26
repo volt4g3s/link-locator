@@ -77,18 +77,18 @@
                         const clickInfo = document.createElement('p');
                         let infoText = `1. Waktu: ${new Date(click.timestamp).toLocaleString()}`;
                         if (click.os) {
-                            infoText += `2. OS: ${click.os}`;
+                            infoText += `<br>2. OS: ${click.os}`;
                         }
                         if (click.device) {
-                            infoText += `3. Device: ${click.device}`;
+                            infoText += `<br>3. Device: ${click.device}`;
                         }
                         if (click.ipInfo) {
-                            infoText += `4. IP: ${click.ipInfo.ip} (${click.ipInfo.city}, ${click.ipInfo.country})`;
+                            infoText += `<br>4. IP: ${click.ipInfo.ip} (${click.ipInfo.city}, ${click.ipInfo.country})`;
                         }
                         if (click.location) {
-                            infoText += `5. Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
+                            infoText += `<br>5. Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
                         } else  {
-                            infoText += '5. Lokasi: Tidak Diizinkan';
+                            infoText += '<br>5. Lokasi: Tidak Diizinkan';
                         }
                         clickInfo.textContent = infoText;
                         locationDataDiv.appendChild(clickInfo);
