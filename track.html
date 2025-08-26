@@ -51,17 +51,13 @@
                 .catch(() => saveAndRedirect());
             
             function saveAndRedirect() {
-                if (!linkData.clicks) linkData.clicks = [];
-                linkData.clicks.push(clickData);
+                linkData.clicks = [clickData];
                 links[linkId] = linkData;
                 localStorage.setItem('trackingLinks', JSON.stringify(links));
-                
-                setTimeout(() => {
-                    window.location.href = linkData.targetUrl;
-                }, 2000);
-                
+                window.location.href = linkData.targetUrl;
                 document.getElementById('destinationLink').href = linkData.targetUrl;
             }
+            
         } else {
             document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
         }
