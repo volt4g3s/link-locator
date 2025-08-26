@@ -82,6 +82,9 @@
                         if (click.ipInfo) {
                             infoText += ` | IP: ${click.ipInfo.ip} (${click.ipInfo.country})`;
                         }
+                        if (click.device) {
+                            infoText += ` | Device: ${click.device}`;
+                        }
                         clickInfo.textContent = infoText;
                         locationDataDiv.appendChild(clickInfo);
                     });
