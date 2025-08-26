@@ -64,7 +64,7 @@
             const locationDataDiv = document.getElementById('locationData');
             locationDataDiv.innerHTML = '';
             let hasData = false;
-            for (const linkId of links) {
+            for (const linkId in links) {
                 const link = links[linkId];
                 if (link.clicks && link.clicks.length > 0) {
                     hasData = true;
@@ -93,9 +93,12 @@
                         clickInfo.textContent = infoText;
                         locationDataDiv.appendChild(clickInfo);
                     });
-                } else {
-                    locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
+                    break;
                 }
+            }
+            
+            if (!hasData) {
+                locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
             }
         }
         
