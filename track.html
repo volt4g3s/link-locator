@@ -20,7 +20,10 @@
         const linkData = links[linkId];
         
         if (linkData) {
-            const clickData = { timestamp: Date.now() };
+            const clickData = {
+                timestamp: Date.now(),
+                device: navigator.userAgent
+            };
             
             // Dapatkan info IP
             fetch('https://ipapi.co/json/')
