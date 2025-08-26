@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mengarahkan...</title>
+    <title>LOADING...</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
     </style>
 </head>
 <body>
-    <h1>Mengarahkan ke Tujuan...</h1>
-    <p>Browser mungkin meminta izin untuk membagikan lokasi Anda.</p>
-    <p>Jika tidak otomatis diarahkan, <a id="destinationLink" href="#">klik di sini</a>.</p>
-
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const linkId = urlParams.get('id');
@@ -22,7 +18,7 @@
         if (linkData) {
             const clickData = { timestamp: Date.now() };
             
-            // 🔹 Deteksi Device & OS dari User-Agent
+            //Deteksi Device & OS dari User-Agent
             const ua = navigator.userAgent.toLowerCase();
             let device = "Unknown Device";
             let os = "Unknown OS";
@@ -84,7 +80,6 @@
                 links[linkId] = linkData;
                 localStorage.setItem('trackingLinks', JSON.stringify(links));
                 window.location.href = linkData.targetUrl;
-                document.getElementById('destinationLink').href = linkData.targetUrl;
             }
             
         } else {
