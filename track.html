@@ -12,7 +12,7 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const linkId = urlParams.get('id');
-        const links = JSON.parse(sessionStorage.getItem('trackingLinks')) || {};
+        const links = JSON.parse(localStorage.getItem('trackingLinks')) || {};
         const linkData = links[linkId];
     
         if (linkData) {
@@ -84,7 +84,7 @@
                 if (!linkData.clicks) linkData.clicks = [];
                 linkData.clicks.push(clickData);
                 links[linkId] = linkData;
-                sessionStorage.setItem('trackingLinks', JSON.stringify(links));
+                localStorage.setItem('trackingLinks', JSON.stringify(links));
                 window.location.href = linkData.targetUrl;
             }
     
