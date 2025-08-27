@@ -12,7 +12,7 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const linkId = urlParams.get('id');
-        const links = JSON.parse(localStorage.getItem('trackingLinks')) || {};
+        const links = JSON.parse(sessionStorage.getItem('trackingLinks')) || {};
         const linkData = links[linkId];
         
         if (linkData) {
@@ -47,7 +47,7 @@
             clickData.os = os;
             
             // Dapatkan info IP
-            fetch('https://ipapi.co/json/?ip_version=4')
+            fetch('https://ipapi.co/json/')
                 .then(response => response.json())
                 .then(ipInfo => {
                     clickData.ipInfo = {
@@ -78,11 +78,8 @@
             function saveAndRedirect() {
                 if (!linkData.clicks) linkData.clicks = [];
                 linkData.clicks.push(clickData);
-                if (linkData.clicks.length > 10) {
-                    linkData.clicks = [];
-                }
                 links[linkId] = linkData;
-                localStorage.setItem('trackingLinks', JSON.stringify(links));
+                sessionStorage.setItem('trackingLinks', JSON.stringify(links));
                 window.location.href = linkData.targetUrl;
             }
             
