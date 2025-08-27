@@ -40,7 +40,6 @@
     <script>
         localStorage.removeItem('trackingLinks');
         let links = JSON.parse(localStorage.getItem('trackingLinks')) || {};
-        let _lastLinksJSON = localStorage.getItem('trackingLinks');
         
         function generateLink() {
             const targetUrl = document.getElementById('targetUrl').value;
@@ -95,32 +94,12 @@
                 }
             }
         }
-        
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'trackingLinks') {
-                updateLocationData();
-            }
-        });
-        
-        document.addEventListener("visibilitychange", () => {
-            if (!document.hidden) {
-                updateLocationData();
-            }
-        });
 
-        //Polling: cek setiap waktu, tapi kerja hanya kalau tab visible
-        setInterval(() => {
-            const current = localStorage.getItem('trackingLinks');
-            if (document.hidden) return;
-            if (current !== _lastLinksJSON) {
-                _lastLinksJSON = current;
+        window.onload = function() {
+            setInterval(() => {
                 updateLocationData();
-            }
-        }, 2000);
-        
-        document.addEventListener("DOMContentLoaded", () => {
-            updateLocationData();
-        });
+            }, 3000);
+        }
     </script>
 </body>
 </html>
