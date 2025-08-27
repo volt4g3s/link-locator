@@ -95,9 +95,15 @@
             }
         }
         
-        window.onload = function() {
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'trackingLinks') {
+                updateLocationData();
+            }
+        });
+        
+        document.addEventListener("DOMContentLoaded", () => {
             updateLocationData();
-        }
+        });
     </script>
 </body>
 </html>
