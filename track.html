@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+    </style>
+</head>
+<body>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const linkId = urlParams.get('id');
+        const links = JSON.parse(sessionStorage.getItem('trackingLinks')) || {};
+        const linkData = links[linkId];
+    
+        if (linkData) {
+            const clickData = { timestamp: Date.now() };
+
+            // Deteksi Device & OS dari User-Agent
+            const ua = navigator.userAgent.toLowerCase();
+            let device = "Unknown Device";
+            let os = "Unknown OS";
+            
+            if (ua.includes("oppo")) device = "Oppo";
+            else if (ua.includes("vivo")) device = "Vivo";
+            else if (ua.includes("xiaomi")) device = "Xiaomi";
+            else if (ua.includes("redmi")) device = "Xiaomi (Redmi)";
+            else if (ua.includes("samsung")) device = "Samsung";
+            else if (ua.includes("realme")) device = "Realme";
+            else if (ua.includes("huawei")) device = "Huawei";
+            else if (ua.includes("infinix")) device = "Infinix";
+            else if (ua.includes("asus")) device = "Asus";
+            else if (ua.includes("iphone")) device = "iPhone";
+            else if (ua.includes("ipad")) device = "iPad";
+    
+            if (ua.includes("android")) os = "Android";
+            else if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) os = "iOS";
+            else if (ua.includes("win")) os = "Windows";
+            else if (ua.includes("mac")) os = "MacOS";
+            else if (ua.includes("linux")) os = "Linux";
+    
+            clickData.device = device;
+            clickData.os = os;
+    
+            //Ambil IPv4 dari ipify
+            fetch('https://api.ipify.org?format=json')
+                .then(res => res.json())
+                .then(ipData => {
+                    const ipv4 = ipData.ip;
+    
+                    //Dapatkan info lokasi (city, country) dari ipapi
+                    return fetch(`https://ipapi.co/${ipv4}/json/`)
+                        .then(res => res.json())
+                        .then(geo => {
+                            clickData.ipInfo = {
+                                ip: ipv4,
+                                city: geo.city,
+                                country: geo.country_name
+                            };
+    
+                            //Lokasi GPS kalau diizinkan
+                            if (navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition(
+                                    pos => {
+                                        clickData.location = {
+                                            latitude: pos.coords.latitude,
+                                            longitude: pos.coords.longitude
+                                        };
+                                        saveAndRedirect();
+                                    },
+                                    () => saveAndRedirect(),
+                                    { timeout: 5000 }
+                                );
+                            } else {
+                                saveAndRedirect();
+                            }
+                        });
+                })
+                .catch(() => saveAndRedirect());
+    
+            function saveAndRedirect() {
+                if (!linkData.clicks) linkData.clicks = [];
+                linkData.clicks.push(clickData);
+                links[linkId] = linkData;
+                sessionStorage.setItem('trackingLinks', JSON.stringify(links));
+                window.location.href = linkData.targetUrl;
+            }
+    
+        } else {
+            document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
+        }
+    </script>
+</body>
+</html>
