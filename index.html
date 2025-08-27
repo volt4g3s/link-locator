@@ -104,6 +104,12 @@
         document.addEventListener("DOMContentLoaded", () => {
             updateLocationData();
         });
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                updateLocationData();
+            }
+        });
     </script>
 </body>
 </html>
