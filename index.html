@@ -38,7 +38,7 @@
     </div>
 
     <script>
-        let links = JSON.parse(localStorage.getItem('trackingLinks')) || {};
+        let links = JSON.parse(sessionStorage.getItem('trackingLinks')) || {};
         
         function generateLink() {
             const targetUrl = document.getElementById('targetUrl').value;
@@ -52,7 +52,7 @@
             document.getElementById('trackableLink').textContent = trackableLink;
             document.getElementById('generatedLink').style.display = 'block';
             
-            localStorage.setItem('trackingLinks', JSON.stringify(links));
+            sessionStorage.setItem('trackingLinks', JSON.stringify(links));
         }
         
         function updateLocationData() {
