@@ -20,7 +20,7 @@
     <h2>LinkTracker - Pembuat Tautan Pelacak</h2>
     
     <div class="container">
-        <h2>Buat Tautan Pelacak Baru</h2>
+        <h3>Buat Tautan Pelacak Baru</h3>
         <input type="text" id="targetUrl" placeholder="https://example.com">
         <button onclick="generateLink()">Buat Tautan Pelacak</button>
         
@@ -31,9 +31,9 @@
     </div>
     
     <div class="container">
-        <h2>Data Lokasi yang Dikumpulkan</h2>
+        <h3>Data Lokasi yang Dikumpulkan</h3>
         <div id="locationData" class="location-data">
-            <p>Data lokasi akan muncul di sini setelah seseorang mengklik tautan dan memberikan persetujuan.</p>
+            <p>Belum ada data lokasi yang dikumpulkan.</p>
         </div>
     </div>
 
@@ -57,10 +57,10 @@
         
         function updateLocationData() {
             const locationDataDiv = document.getElementById('locationData');
-            locationDataDiv.innerHTML = '';
             let hasData = false;
             for (const linkId in links) {
                 const link = links[linkId];
+                locationDataDiv.innerHTML = '';
                 if (link.clicks && link.clicks.length > 0) {
                     hasData = true;
                     const linkHeader = document.createElement('h3');
@@ -88,11 +88,9 @@
                         clickInfo.textContent = infoText;
                         locationDataDiv.appendChild(clickInfo);
                     });
+                } else {
+                    locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
                 }
-            }
-            
-            if (!hasData) {
-                locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
             }
         }
         
