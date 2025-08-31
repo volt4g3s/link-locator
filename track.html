@@ -43,15 +43,7 @@
         const linkRef = doc(db, "trackingLinks", linkId);
 
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                try {
-                    await signInAnonymously(auth);
-                    return;
-                } catch (err) {
-                    console.error("Auth gagal:", err);
-                    return;
-                }
-            }
+            if (!user) return;
 
             const docSnap = await getDoc(linkRef);
             if (!docSnap.exists()) {
