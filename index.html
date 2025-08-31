@@ -45,6 +45,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         // Ganti dengan config Firebase project kamu
         const firebaseConfig = {
@@ -58,23 +59,35 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // login anonymous otomatis
+        signInAnonymously(auth).catch(err => {
+            console.error("Auth gagal:", err);
+        });
 
         async function generateLink() {
             const targetUrl = document.getElementById('targetUrl').value;
             if (!targetUrl) return alert('Masukkan URL tujuan');
-            
-            const linkId = 'link_' + Date.now();
-            await setDoc(doc(db, "trackingLinks", linkId), {
-                targetUrl,
-                clicks: []
-            });
 
-            const trackableLink = window.location.href.replace(/[^/]*$/, '') + 'track.html?id=' + linkId;
-            document.getElementById('trackableLink').href = trackableLink;
-            document.getElementById('trackableLink').textContent = trackableLink;
-            document.getElementById('generatedLink').style.display = 'block';
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const linkId = 'link_' + Date.now();
+                    await setDoc(doc(db, "trackingLinks", linkId), {
+                        targetUrl,
+                        clicks: [],
+                        owner: user.uid
+                    });
+
+                    const trackableLink = window.location.href.replace(/[^/]*$/, '') + 'track.html?id=' + linkId;
+                    document.getElementById('trackableLink').href = trackableLink;
+                    document.getElementById('trackableLink').textContent = trackableLink;
+                    document.getElementById('generatedLink').style.display = 'block';
+                }
+            });
         }
-        
+        window.generateLink = generateLink;
+
         async function updateLocationData() {
             const locationDataDiv = document.getElementById('locationData');
             locationDataDiv.innerHTML = '';
@@ -123,11 +136,9 @@
                     attribution: '© OpenStreetMap'
                 }).addTo(map);
 
-                // garis polyline merah
                 const polyline = L.polyline(allCoords, { color: 'red' }).addTo(map);
                 map.fitBounds(polyline.getBounds());
 
-                // titik marker merah
                 allCoords.forEach((coord, i) => {
                     L.marker(coord, {
                         icon: L.icon({
@@ -138,8 +149,7 @@
                             popupAnchor: [1, -34],
                             shadowSize: [41, 41]
                         })
-                    }).addTo(map)
-                    .bindPopup(`Posisi ke-${i+1}`);
+                    }).addTo(map).bindPopup(`Posisi ke-${i+1}`);
                 });
             }
         }
