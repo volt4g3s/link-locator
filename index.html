@@ -72,7 +72,7 @@
 
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    const linkId = 'link_' + Date.now();
+                    const linkId = Date.now();
                     await setDoc(doc(db, "trackingLinks", linkId), {
                         targetUrl,
                         clicks: [],
