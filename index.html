@@ -67,18 +67,15 @@
         });
 
         async function generateLink() {
-            const targetUrl = (document.getElementById('targetUrl').value || "").trim();
-            if (typeof targetUrl !== "string" || targetUrl.length === 0) {
-                alert("Masukkan URL tujuan");
-                return;
-            }
+            const targetUrl = document.getElementById('targetUrl').value;
+            if (!targetUrl) return alert('Masukkan URL tujuan');
             if (!targetUrl.startsWith("http")) {
                 alert("URL harus dimulai dengan http atau https");
                 return;
             }
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    const linkId = Date.now();
+                    const linkId = 'link_' + Date.now();
                     await setDoc(doc(db, "trackingLinks", linkId), {
                         targetUrl,
                         clicks: [],
