@@ -55,7 +55,7 @@
             const clickData = { timestamp: Date.now() };
 
             // Deteksi Device & OS
-            const ua = navigator.userAgent.toLowerCase();
+            const ua = (navigator.userAgent || "").toLowerCase();
             let device = "Unknown Device";
             let os = "Unknown OS";
 
