@@ -39,19 +39,25 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const urlParams = new URLSearchParams(window.location.search);
-        const linkId = urlParams.get('id');
+        const linkId = urlParams.get("id") || "";
+        if (!linkId) {
+            document.body.innerHTML = "<h2>Link ID tidak ada di URL</h2>";
+            throw new Error("Link ID kosong");
+        }
         const linkRef = doc(db, "trackingLinks", linkId);
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) return;
-
             const docSnap = await getDoc(linkRef);
             if (!docSnap.exists()) {
-                document.body.innerHTML = '<h1>Error: Tautan tidak valid</h1>';
+                document.body.innerHTML = "<h2> Dokumen link tidak ditemukan</h2>";
                 return;
             }
-
-            const linkData = docSnap.data();
+            const linkData = docSnap.data() || {};
+            if (typeof linkData.targetUrl !== "string") {
+                document.body.innerHTML = "<h2>Error: Tautan tidak valid</h2>";
+                return;
+            }
             const clickData = { timestamp: Date.now() };
 
             // Deteksi Device & OS
