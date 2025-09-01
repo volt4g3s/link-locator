@@ -38,10 +38,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const urlParams = new URLSearchParams(window.location.search);
-        console.log("window.location.search =", window.location.search);
-        console.log("linkId param =", urlParams.get("id"));
-        const linkId = urlParams.get("id") || "";
+        const urlParams = window.location.href;
+        const match = urlParams.match(/[?&]id=([^&]+)/);
+        const linkId = match ? match[1] : "";
+        console.log("FULL URL =", urlParams);
+        console.log("Extracted linkId =", linkId);
         if (!linkId) {
             document.body.innerHTML = "<h2>Link ID tidak ada di URL</h2>";
             throw new Error("Link ID kosong");
