@@ -40,9 +40,8 @@
         const auth = getAuth(app);
         const urlParams = new URLSearchParams(window.location.search);
         console.log("window.location.search =", window.location.search);
-        console.log("linkId param 1 =", urlParams.get("id"));
+        console.log("linkId param =", urlParams.get("id"));
         const linkId = urlParams.get("id") || "";
-        console.log("linkId param 2 =", linkId);
         if (!linkId) {
             document.body.innerHTML = "<h2>Link ID tidak ada di URL</h2>";
             throw new Error("Link ID kosong");
