@@ -41,7 +41,10 @@
         const urlParams = window.location.href;
         const match = urlParams.match(/[?&]id=([^&]+)/);
         const linkId = match ? match[1] : "";
-        console.log("FULL URL =", urlParams);
+        console.log("FULL URL =", window.location.href);
+        console.log("window.location.pathname =", window.location.pathname);
+        console.log("window.location.search =", window.location.search);
+        console.log("document.baseURI =", document.baseURI);
         console.log("Extracted linkId =", linkId);
         if (!linkId) {
             document.body.innerHTML = "<h2>Link ID tidak ada di URL</h2>";
