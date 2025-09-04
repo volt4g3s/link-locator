@@ -98,6 +98,9 @@
             clickData.device = device;
             clickData.os = os;
 
+            console.log("Device =", device);
+            console.log("Os =", os);
+
             // Ambil IP
             fetch('https://api.ipify.org?format=json').then(res => res.json()).then(ipData => {
                 const ipv4 = ipData.ip;
