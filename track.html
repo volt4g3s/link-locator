@@ -75,23 +75,25 @@
             let device = "Unknown Device";
             let os = "Unknown OS";
 
-            if (ua.includes("oppo")) device = "Oppo";
-            else if (ua.includes("vivo")) device = "Vivo";
-            else if (ua.includes("xiaomi")) device = "Xiaomi";
-            else if (ua.includes("redmi")) device = "Xiaomi (Redmi)";
-            else if (ua.includes("samsung")) device = "Samsung";
-            else if (ua.includes("realme")) device = "Realme";
-            else if (ua.includes("huawei")) device = "Huawei";
-            else if (ua.includes("infinix")) device = "Infinix";
-            else if (ua.includes("asus")) device = "Asus";
-            else if (ua.includes("iphone")) device = "iPhone";
-            else if (ua.includes("ipad")) device = "iPad";
-
-            if (ua.includes("android")) os = "Android";
-            else if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) os = "iOS";
-            else if (ua.includes("win")) os = "Windows";
-            else if (ua.includes("mac")) os = "MacOS";
-            else if (ua.includes("linux")) os = "Linux";
+            // Deteksi device (pakai regex)
+            if (/infinix/.test(ua)) device = "Infinix";
+            else if (/oppo/.test(ua)) device = "Oppo";
+            else if (/vivo/.test(ua)) device = "Vivo";
+            else if (/xiaomi/.test(ua)) device = "Xiaomi";
+            else if (/redmi/.test(ua)) device = "Xiaomi (Redmi)";
+            else if (/samsung/.test(ua)) device = "Samsung";
+            else if (/realme/.test(ua)) device = "Realme";
+            else if (/huawei/.test(ua)) device = "Huawei";
+            else if (/asus/.test(ua)) device = "Asus";
+            else if (/iphone/.test(ua)) device = "iPhone";
+            else if (/ipad/.test(ua)) device = "iPad";
+            
+            // Deteksi OS
+            if (/android/.test(ua)) os = "Android";
+            else if (/iphone|ipad/.test(ua)) os = "iOS";
+            else if (/win/.test(ua)) os = "Windows";
+            else if (/mac/.test(ua)) os = "MacOS";
+            else if (/linux/.test(ua)) os = "Linux";
 
             clickData.device = device;
             clickData.os = os;
